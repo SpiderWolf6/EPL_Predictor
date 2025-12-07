@@ -62,16 +62,44 @@ def scrape_fbref(year: int) -> Dict[str, pd.DataFrame]:
         
     return {}
 
-if __name__ == "__main__":
-    season_year = 2024 
-    prem_stats = scrape_fbref(season_year)
 
-    print(f"\n✅ Successfully retrieved **{len(prem_stats)}** tables.")
+def scrape_multiple_years(start_year: int, end_year: int, table_key: str) -> Dict[str, pd.DataFrame]:
 
-    if 'main_standings_table' in prem_stats:
-        print("\n--- Main League Standings (Head) ---")
-        print(prem_stats['main_standings_table'].head())
+    all_season_data = {}
     
-    if 'stats_shooting' in prem_stats:
-        print("\n--- Shooting Stats (Head) ---")
-        print(prem_stats['stats_shooting'].head())
+    for year in range(start_year, end_year + 1):
+        
+        year_data = scrape_fbref(year)
+        
+        if year_data and table_key in year_data:
+            
+            season_label = f"{year-1}-{year}"
+            
+            all_season_data[season_label] = year_data[table_key]
+            print(f"✅ Extracted and stored data for season: **{season_label}**")
+            
+    return all_season_data
+
+if __name__ == "__main__":
+    
+    START_YEAR = 2020
+    END_YEAR = 2024
+    
+    TABLE_TO_AGGREGATE = 'main_standings_table' 
+
+    print(f"Starting multi-season scrape for the '{TABLE_TO_AGGREGATE}' table...")
+    
+    final_data_by_season = scrape_multiple_years(
+        start_year=START_YEAR,
+        end_year=END_YEAR,
+        table_key=TABLE_TO_AGGREGATE
+    )
+
+    print("\n--- FINAL AGGREGATION SUMMARY ---")
+    print(f"Total seasons successfully extracted: **{len(final_data_by_season)}**")
+    print("Seasons (Keys) in the final dictionary:")
+    print(list(final_data_by_season.keys()))
+    
+    if final_data_by_season:
+        print("\nHead of the 2021-2022 Season Standings:")
+        print(final_data_by_season.get('2021-2022').head())
