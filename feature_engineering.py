@@ -22,8 +22,12 @@ def create_rolling_features(input_path, output_path, window=5):
     ]
     df['target'] = np.select(conditions, [1, 0, 2], default=-1)
 
+    # Calculate match points to compute 'Last 5 Game Points'
+    df['home_pts'] = np.where(df['target'] == 1, 3, np.where(df['target'] == 0, 1, 0))
+    df['away_pts'] = np.where(df['target'] == 2, 3, np.where(df['target'] == 0, 1, 0))
+
     # 3. Match-level stats available in the dataset to be converted into rolling averages
-    match_stats = ['xg', 'score']
+    match_stats = ['xg', 'score', 'pts']
 
     # 4. Stack all matches per team vertically (ignoring home/away split temporarily)
     home_df = df[['date', 'season', 'home_team'] + [f'home_{s}' for s in match_stats]].copy()
@@ -84,8 +88,50 @@ def create_rolling_features(input_path, output_path, window=5):
     df_ml = pd.merge(df_ml, home_season_df, on=['home_team', 'season'], how='left')
     df_ml = pd.merge(df_ml, away_season_df, on=['away_team', 'season'], how='left')
 
+    # 8.5 Calculate Derived Metrics (e.g., xGD = xG - xGA) from the planning doc
+    if 'home_season_xG' in df_ml.columns and 'home_season_xGA' in df_ml.columns:
+        df_ml['home_season_xGD'] = df_ml['home_season_xG'] - df_ml['home_season_xGA']
+        df_ml['away_season_xGD'] = df_ml['away_season_xG'] - df_ml['away_season_xGA']
+
     # 9. Drop rows with NaN in rolling stats (e.g., very first match with no history)
     df_ml = df_ml.dropna(subset=[f'home_xg_rolling_{window}'])
+
+    # Add keywords for the important metrics from the planning doc here.
+    # e.g., PPDA, xPTS, xG, xGA (case-insensitive matching is applied)
+    INTERESTING_METRICS = [
+        # Understat (Scoring / Conceding / Pressing)
+        'xG', 'xA', 'xGA', 'xGD', 'xPTS', 'PPDA', 'OPPDA',
+        
+        # FBref (Progression / Defensive / Goalkeeping)
+        'PrgC',          # Progressive Carries
+        'PrgP',          # Progressive Passes
+        'Progressive',   # Fallback for other progressive stats
+        'Save',          # Save %
+        
+        # SofaScore / FBref (Player Impact aggregates / Duels / Tackles)
+        'Tkl', 'Tackles', 
+        'Int', 'Interceptions',
+        'Duels', 'BigChances',
+        
+        # Understat Player specific
+        'top_scorer_goals', 
+        'top_playmaker_xA'
+    ]
+
+    # Always include base info and rolling stats
+    base_and_rolling_cols = ['date', 'season', 'home_team', 'away_team', 'target'] + \
+                            [f'home_{c}' for c in rolling_features] + \
+                            [f'away_{c}' for c in rolling_features]
+
+    # Select only the columns that contain any of the words in INTERESTING_METRICS
+    selected_season_cols = [
+        col for col in df_ml.columns 
+        if any(metric.lower() in col.lower() for metric in INTERESTING_METRICS)
+    ]
+
+    # Keep only the final necessary columns and drop the rest (hundreds of unnecessary stats)
+    final_columns = list(dict.fromkeys(base_and_rolling_cols + selected_season_cols)) # Remove duplicates
+    df_ml = df_ml[[col for col in final_columns if col in df_ml.columns]]
 
     # 10. Save the final ML-ready dataset
     df_ml.to_csv(output_path, index=False)
