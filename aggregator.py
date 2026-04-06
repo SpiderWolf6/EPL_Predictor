@@ -78,7 +78,7 @@ def load_understat(file_path="understat_by_season.xlsx"):
     print(f"[Understat] Loading '{file_path}'...")
     all_sheets = pd.read_excel(file_path, sheet_name=None)
 
-    matches_list, season_list = [], []
+    matches_list, season_list, players_list = [], [], []
 
     for sheet_name, df in all_sheets.items():
         raw_season = sheet_name.split("_")[0]
@@ -95,11 +95,36 @@ def load_understat(file_path="understat_by_season.xlsx"):
             df = df.rename(columns={"team": "team_name"})
             season_list.append(df[["team_name", "season", "PPDA", "xPTS", "xG", "xGA"]])
 
+        elif sheet_name.endswith("_players"):
+            df["season"] = season
+            players_list.append(df)
+
     matches_df = pd.concat(matches_list, ignore_index=True)
     season_df = pd.concat(season_list, ignore_index=True)
 
     matches_df = standardize_teams(matches_df, ["home_team", "away_team"])
     season_df = standardize_teams(season_df, ["team_name"])
+
+    # ── Extract Minimal Player Data (Star Player Factor) ──
+    if players_list:
+        players_df = pd.concat(players_list, ignore_index=True)
+        if "team_title" in players_df.columns:
+            # Understat team_title can have multiple teams (e.g. transferred players). Use the primary one.
+            players_df["team_name"] = players_df["team_title"].astype(str).apply(lambda x: x.split(',')[0].strip())
+            players_df = standardize_teams(players_df, ["team_name"])
+            
+            for col in ["goals", "xA"]:
+                if col in players_df.columns:
+                    players_df[col] = pd.to_numeric(players_df[col], errors="coerce").fillna(0)
+            
+            # Find the best scorer and playmaker for each team per season
+            player_features = players_df.groupby(["team_name", "season"]).agg(
+                top_scorer_goals=("goals", "max"),
+                top_playmaker_xA=("xA", "max")
+            ).reset_index()
+            
+            # Merge the player features into the season summary
+            season_df = season_df.merge(player_features, on=["team_name", "season"], how="left")
 
     print(f"  -> {len(matches_df)} matches | {len(season_df)} team-season records")
     return matches_df, season_df
@@ -265,12 +290,13 @@ def aggregate_master(
     # ── 1. Understat (base)
     matches, understat_season = load_understat(understat_file)
 
+    # Dynamically pick up all season metrics including the new player stats
+    us_metrics = [c for c in understat_season.columns if c not in ("team_name", "season")]
+
     # Merge Understat season stats for home team
-    home_us = understat_season.rename(columns={
-        "team_name": "_merge_key",
-        "PPDA": "home_PPDA", "xPTS": "home_season_xPTS",
-        "xG": "home_season_xG", "xGA": "home_season_xGA",
-    })
+    home_rename = {"team_name": "_merge_key"}
+    home_rename.update({m: f"home_season_{m}" for m in us_metrics})
+    home_us = understat_season.rename(columns=home_rename)
     matches = matches.merge(
         home_us,
         left_on=["home_team", "season"], right_on=["_merge_key", "season"],
@@ -278,11 +304,9 @@ def aggregate_master(
     ).drop(columns=["_merge_key"])
 
     # Merge Understat season stats for away team
-    away_us = understat_season.rename(columns={
-        "team_name": "_merge_key",
-        "PPDA": "away_PPDA", "xPTS": "away_season_xPTS",
-        "xG": "away_season_xG", "xGA": "away_season_xGA",
-    })
+    away_rename = {"team_name": "_merge_key"}
+    away_rename.update({m: f"away_season_{m}" for m in us_metrics})
+    away_us = understat_season.rename(columns=away_rename)
     matches = matches.merge(
         away_us,
         left_on=["away_team", "season"], right_on=["_merge_key", "season"],
@@ -311,9 +335,8 @@ def aggregate_master(
     ordered_cols = [c for c in base_cols if c in matches.columns] + remaining
     matches = matches[ordered_cols]
 
-    # ── 6. Fill missing values and save
-    matches = matches.fillna("NONE")
-    matches.to_csv(output_file, index=False)
+    # ── 6. Save (Let pandas handle missing values natively as empty/NaN)
+    matches.to_csv(output_file, index=False, na_rep="NaN")
 
     print("-" * 55)
     print(f"SUCCESS: {len(matches)} matches | {len(matches.columns)} columns")
