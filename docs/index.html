@@ -18,9 +18,10 @@
             red: { 400: '#f87171' },
           },
           fontFamily: {
-            sans: ['Geist', 'system-ui', 'sans-serif'],
+            sans: ['Barlow', 'system-ui', 'sans-serif'],
             mono: ['Geist Mono', 'monospace'],
             display: ['Bebas Neue', 'sans-serif'],
+            condensed: ['Barlow Condensed', 'sans-serif'],
           },
         }
       }
@@ -28,14 +29,15 @@
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@300;400;500;600;700&family=Barlow+Condensed:wght@400;500;600&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { background-color: #080d08; color: #e5e7eb; font-family: 'Geist', system-ui, sans-serif; }
+    body { background-color: #080d08; color: #e5e7eb; font-family: 'Barlow', system-ui, sans-serif; }
 
     /* ── display / heading ── */
-    .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
-    .font-mono    { font-family: 'Geist Mono', monospace; }
+    .font-display    { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
+    .font-mono       { font-family: 'Geist Mono', monospace; }
+    .font-condensed  { font-family: 'Barlow Condensed', sans-serif; }
 
     /* ── probability bars ── */
     .prob-bar-track {
@@ -83,10 +85,11 @@
     /* ── stat label ── */
     .stat-label {
       color: #4b5563;
-      font-size: 0.6rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.12em;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 500;
     }
 
     /* ── accuracy ring ── */
@@ -365,7 +368,7 @@
   <footer class="border-t border-[#1e2d1e] mt-16 py-8">
     <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
       <p class="text-[#4b5563] text-xs">Built with LightGBM, Poisson regression, and 11 seasons of EPL data.</p>
-      <a href="https://github.com/sohamm20/EPL_Predictor_Tool" target="_blank"
+      <a href="https://github.com/SpiderWolf6/EPL_Predictor" target="_blank"
         class="text-[#4b5563] hover:text-[#4ade80] text-xs transition-colors">GitHub →</a>
     </div>
   </footer>
@@ -525,10 +528,16 @@ function upcomingCard(m) {
   const homeName = m.home_team_full || TEAM_ABBR[m.home_team] || m.home_team;
   const awayName = m.away_team_full || TEAM_ABBR[m.away_team] || m.away_team;
 
-  const kickoff = m.kickoff ? new Date(m.kickoff) : null;
-  const timeStr = kickoff
-    ? kickoff.toLocaleString('en-US', { weekday:'short', month:'short', day:'numeric', hour:'numeric', minute:'2-digit', hour12:true })
-    : '';
+  const kickoff = m.kickoff ? m.kickoff : null;
+  const timeStr = kickoff ? (() => {
+    const [datePart, timePart] = kickoff.split('T');
+    const [, month, day] = datePart.split('-');
+    const [h, min] = timePart.split(':').map(Number);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const hour = h > 12 ? h - 12 : h === 0 ? 12 : h;
+    const months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    return `${months[+month]} ${+day}, ${hour}:${String(min).padStart(2,'0')} ${ampm} ET`;
+  })() : '';
 
   return `
     <div class="match-card p-5 fade-in">
