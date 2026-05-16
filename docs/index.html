@@ -18,75 +18,113 @@
             red: { 400: '#f87171' },
           },
           fontFamily: {
-            sans: ['Inter', 'system-ui', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
+            sans: ['Geist', 'system-ui', 'sans-serif'],
+            mono: ['Geist Mono', 'monospace'],
+            display: ['Bebas Neue', 'sans-serif'],
           },
         }
       }
     }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
-    body { background-color: #0a0f0a; color: #e5e7eb; }
+    body { background-color: #080d08; color: #e5e7eb; font-family: 'Geist', system-ui, sans-serif; }
 
+    /* ── display / heading ── */
+    .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.04em; }
+    .font-mono    { font-family: 'Geist Mono', monospace; }
+
+    /* ── probability bars ── */
     .prob-bar-track {
-      height: 6px;
-      background: #1e2d1e;
+      height: 5px;
+      background: #1a271a;
       border-radius: 9999px;
       overflow: hidden;
     }
     .prob-bar-fill {
       height: 100%;
       border-radius: 9999px;
-      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+      transition: width 0.65s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    .elo-pip {
-      width: 8px; height: 8px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
+    /* ── tabs ── */
     .tab-active {
-      border-bottom: 2px solid #4ade80;
+      border-bottom: 3px solid #4ade80;
       color: #4ade80;
+      font-weight: 600;
     }
     .tab-inactive {
-      border-bottom: 2px solid transparent;
+      border-bottom: 3px solid transparent;
       color: #6b7280;
     }
     .tab-inactive:hover { color: #9ca3af; }
 
+    /* ── cards ── */
     .match-card {
-      background: #111811;
+      background: #0e160e;
       border: 1px solid #1e2d1e;
-      border-radius: 12px;
-      transition: border-color 0.2s;
+      border-radius: 14px;
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .match-card:hover { border-color: #2d4a2d; }
+    .match-card:hover {
+      border-color: #2d4a2d;
+      box-shadow: 0 0 0 1px #2d4a2d22, 0 4px 24px #00000060;
+    }
 
-    .badge-home  { background: #052e16; color: #4ade80; }
-    .badge-draw  { background: #1c1917; color: #fbbf24; }
-    .badge-away  { background: #2d0a0a; color: #f87171; }
-    .badge-miss  { background: #1a1a1a; color: #6b7280; }
+    /* ── result badges ── */
+    .badge-home  { background: #052e16; color: #4ade80; border: 1px solid #16512640; }
+    .badge-draw  { background: #1c1510; color: #fbbf24; border: 1px solid #7c571440; }
+    .badge-away  { background: #1f0505; color: #f87171; border: 1px solid #7c151540; }
+    .badge-miss  { background: #141414; color: #6b7280; border: 1px solid #2a2a2a; }
 
-    .stat-label { color: #4b5563; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+    /* ── stat label ── */
+    .stat-label {
+      color: #4b5563;
+      font-size: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      font-family: 'Geist Mono', monospace;
+    }
 
+    /* ── accuracy ring ── */
     .accuracy-ring {
       width: 64px; height: 64px;
       border-radius: 50%;
       display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: 1rem;
+      font-family: 'Geist Mono', monospace;
     }
 
+    /* ── scoreline pill ── */
+    .scoreline-pill {
+      background: #0d1a0d;
+      border: 1px solid #1e2d1e;
+      border-radius: 8px;
+      padding: 4px 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color 0.15s;
+    }
+    .scoreline-pill.top { border-color: #4ade8050; background: #071207; }
+
+    /* ── header accent stripe ── */
+    .header-stripe {
+      height: 3px;
+      background: linear-gradient(90deg, #4ade80 0%, #16a34a 40%, transparent 100%);
+    }
+
+    /* ── animations ── */
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+      from { opacity: 0; transform: translateY(10px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    .fade-in { animation: fadeIn 0.3s ease forwards; }
+    .fade-in { animation: fadeIn 0.35s ease forwards; }
 
+    /* ── spinner ── */
     .spinner {
       border: 2px solid #1e2d1e;
       border-top-color: #4ade80;
@@ -96,26 +134,40 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── scrollbar ── */
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0a0f0a; }
+    ::-webkit-scrollbar-track { background: #080d08; }
     ::-webkit-scrollbar-thumb { background: #1e2d1e; border-radius: 3px; }
+
+    /* ── vs divider ── */
+    .vs-chip {
+      background: #1a271a;
+      border: 1px solid #1e2d1e;
+      border-radius: 6px;
+      padding: 2px 8px;
+      font-size: 0.7rem;
+      color: #4b5563;
+      font-family: 'Geist Mono', monospace;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 <body class="min-h-screen font-sans">
 
   <!-- Header -->
-  <header class="border-b border-[#1e2d1e] sticky top-0 z-50" style="background:#0a0f0a;">
-    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+  <header class="border-b border-[#1e2d1e] sticky top-0 z-50" style="background:#080d08;">
+    <div class="header-stripe"></div>
+    <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style="background:#052e16;">⚽</div>
+        <div class="w-9 h-9 rounded-lg flex items-center justify-center text-xl" style="background:#052e16;border:1px solid #16512640;">⚽</div>
         <div>
-          <h1 class="font-semibold text-white text-sm leading-none">EPL Predictor</h1>
-          <p class="text-[#4b5563] text-xs mt-0.5">ML-powered match predictions</p>
+          <h1 class="font-display text-white leading-none" style="font-size:1.5rem;">EPL PREDICTOR</h1>
+          <p class="text-[#4b5563] text-xs mt-0.5 font-mono tracking-wide">ML-POWERED MATCH PREDICTIONS</p>
         </div>
       </div>
       <div id="meta-badge" class="text-right hidden">
-        <p class="text-[#4ade80] text-xs font-mono font-medium" id="meta-season"></p>
-        <p class="text-[#4b5563] text-xs" id="meta-updated"></p>
+        <p class="text-[#4ade80] font-mono text-xs font-semibold tracking-widest" id="meta-season"></p>
+        <p class="text-[#4b5563] text-xs font-mono" id="meta-updated"></p>
       </div>
     </div>
   </header>
@@ -151,8 +203,8 @@
     <div id="tab-content-upcoming" class="hidden">
       <div class="mb-6 flex items-center justify-between">
         <div>
-          <h2 class="text-white font-semibold text-lg" id="upcoming-title">Matchweek —</h2>
-          <p class="text-[#4b5563] text-sm mt-0.5">Predictions generated by ensemble model (LightGBM + Poisson)</p>
+          <h2 class="font-display text-white leading-tight" style="font-size:1.75rem;" id="upcoming-title">MATCHWEEK —</h2>
+          <p class="text-[#4b5563] text-xs mt-1 font-mono tracking-wide">ENSEMBLE MODEL · LIGHTGBM + POISSON</p>
         </div>
         <div id="accuracy-widget" class="hidden flex items-center gap-3 text-right">
           <div>
@@ -170,8 +222,8 @@
     <!-- Past tab -->
     <div id="tab-content-past" class="hidden">
       <div class="mb-6">
-        <h2 class="text-white font-semibold text-lg">Past Predictions</h2>
-        <p class="text-[#4b5563] text-sm mt-0.5">How the model performed on completed matchweeks</p>
+        <h2 class="font-display text-white leading-tight" style="font-size:1.75rem;">PAST PREDICTIONS</h2>
+        <p class="text-[#4b5563] text-xs mt-1 font-mono tracking-wide">HOW THE MODEL PERFORMED ON COMPLETED MATCHWEEKS</p>
       </div>
       <div id="accuracy-summary" class="hidden grid grid-cols-3 gap-4 mb-8"></div>
       <div id="past-content"></div>
@@ -183,14 +235,14 @@
     <!-- Model tab -->
     <div id="tab-content-model" class="hidden fade-in">
       <div class="mb-6">
-        <h2 class="text-white font-semibold text-lg">Model Details</h2>
-        <p class="text-[#4b5563] text-sm mt-0.5">Architecture, features, and cross-validation performance</p>
+        <h2 class="font-display text-white leading-tight" style="font-size:1.75rem;">MODEL DETAILS</h2>
+        <p class="text-[#4b5563] text-xs mt-1 font-mono tracking-wide">ARCHITECTURE · FEATURES · CROSS-VALIDATION PERFORMANCE</p>
       </div>
       <div class="grid gap-4">
 
         <!-- CV performance -->
         <div class="match-card p-6">
-          <h3 class="text-white font-medium mb-4">Cross-validation performance</h3>
+          <h3 class="font-display text-white mb-4 tracking-wide" style="font-size:1.2rem;">CROSS-VALIDATION PERFORMANCE</h3>
           <p class="text-[#4b5563] text-xs mb-4">Walk-forward CV — train on seasons 1..k, validate on k+1. 9 folds, 2015-16 through 2025-26.</p>
           <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
             <div>
@@ -218,7 +270,7 @@
 
         <!-- Ensemble -->
         <div class="match-card p-6">
-          <h3 class="text-white font-medium mb-4">Ensemble architecture</h3>
+          <h3 class="font-display text-white mb-4 tracking-wide" style="font-size:1.2rem;">ENSEMBLE ARCHITECTURE</h3>
           <div class="grid gap-3 sm:grid-cols-2">
             <div class="rounded-lg p-4" style="background:#0d150d;border:1px solid #1e2d1e;">
               <p class="text-[#4ade80] text-xs font-medium mb-1">Winner prediction</p>
@@ -235,7 +287,7 @@
 
         <!-- Features -->
         <div class="match-card p-6">
-          <h3 class="text-white font-medium mb-4">Features (34 total)</h3>
+          <h3 class="font-display text-white mb-4 tracking-wide" style="font-size:1.2rem;">FEATURES <span class="text-[#4b5563]" style="font-size:0.9rem;">34 TOTAL</span></h3>
           <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             <div>
               <p class="text-[#4ade80] text-xs font-medium mb-2">Season-level stats</p>
@@ -271,7 +323,7 @@
 
         <!-- Data sources -->
         <div class="match-card p-6">
-          <h3 class="text-white font-medium mb-4">Data sources</h3>
+          <h3 class="font-display text-white mb-4 tracking-wide" style="font-size:1.2rem;">DATA SOURCES</h3>
           <div class="grid gap-2 sm:grid-cols-2">
             <div class="flex gap-3 items-start">
               <span class="text-[#4ade80] text-xs font-mono mt-0.5">01</span>
@@ -335,7 +387,7 @@ const TEAM_LOGOS = {
   LEE: 'leeds.png',
   LIV: 'liverpool.png',
   MCI: 'man_city.png',
-  MUN: 'man_utd.png',
+  MUN: 'man_united.png',
   NEW: 'newcastle.png',
   NFO: 'nottingham_forest.png',
   SOU: 'southampton.png',
@@ -491,9 +543,9 @@ function upcomingCard(m) {
         </div>
 
         <div class="text-center px-4 flex-shrink-0">
-          <div class="text-[#4ade80] font-mono font-bold text-lg tracking-widest">${m.predicted_score}</div>
-          <p class="stat-label mt-0.5">predicted</p>
-          ${timeStr ? `<p class="text-[#4b5563] text-xs mt-1">${timeStr}</p>` : ''}
+          <div class="font-display text-[#4ade80] leading-none" style="font-size:2.2rem;letter-spacing:0.12em;">${m.predicted_score}</div>
+          <p class="stat-label mt-1">predicted</p>
+          ${timeStr ? `<p class="text-[#4b5563] text-xs mt-1.5 font-mono">${timeStr}</p>` : ''}
         </div>
 
         <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
@@ -637,7 +689,7 @@ async function init() {
     document.getElementById('meta-badge').classList.remove('hidden');
 
     // upcoming
-    document.getElementById('upcoming-title').textContent = `Matchweek ${data.matchweek} · ${data.season}`;
+    document.getElementById('upcoming-title').textContent = `MATCHWEEK ${data.matchweek} · ${data.season}`;
     const upcomingContainer = document.getElementById('upcoming-cards');
     if (data.matches && data.matches.length > 0) {
       upcomingContainer.innerHTML = data.matches.map(m => upcomingCard(m)).join('');
@@ -655,7 +707,7 @@ async function init() {
         <div class="match-card p-5 mb-4 fade-in">
           <div class="flex items-center justify-between mb-3">
             <div>
-              <h3 class="text-white font-medium text-sm">Matchweek ${wk.matchweek}</h3>
+              <h3 class="font-display text-white tracking-wide" style="font-size:1.1rem;">MATCHWEEK ${wk.matchweek}</h3>
               <p class="text-[#4b5563] text-xs">${wk.season || data.season}</p>
             </div>
             <div class="text-right">
