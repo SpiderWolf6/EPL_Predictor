@@ -1,6 +1,6 @@
 # EPL Match Predictor
 
-End-to-end pipeline that scrapes 11 seasons of English Premier League data, engineers 34 match-level features, and predicts outcomes using a tuned LightGBM + Poisson ensemble. All code lives in a single Jupyter notebook: `scraper_master.ipynb`.
+End-to-end pipeline that scrapes 11 seasons of English Premier League data, engineers 34 match-level features, and predicts outcomes using a tuned LightGBM + Poisson ensemble. All code lives in a single Jupyter notebook: `epl_predictor.ipynb`.
 
 ---
 
