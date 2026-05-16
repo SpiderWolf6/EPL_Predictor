@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.env
+.venv/
+env/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data files — raw scraped data stays local
+data/
+downloaded_files/
+*.xlsx
+*.xls
+*.csv
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code memory
+.claude/
+
+# Secrets / credentials
+*.env
+secrets.json
+credentials.json

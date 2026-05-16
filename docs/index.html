@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPL Match Predictor</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            pitch: '#0a0f0a',
+            card: '#111811',
+            border: '#1e2d1e',
+            green: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', 900: '#052e16' },
+            amber: { 400: '#fbbf24' },
+            red: { 400: '#f87171' },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; }
+    body { background-color: #0a0f0a; color: #e5e7eb; }
+
+    .prob-bar-track {
+      height: 6px;
+      background: #1e2d1e;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+    .prob-bar-fill {
+      height: 100%;
+      border-radius: 9999px;
+      transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .elo-pip {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .tab-active {
+      border-bottom: 2px solid #4ade80;
+      color: #4ade80;
+    }
+    .tab-inactive {
+      border-bottom: 2px solid transparent;
+      color: #6b7280;
+    }
+    .tab-inactive:hover { color: #9ca3af; }
+
+    .match-card {
+      background: #111811;
+      border: 1px solid #1e2d1e;
+      border-radius: 12px;
+      transition: border-color 0.2s;
+    }
+    .match-card:hover { border-color: #2d4a2d; }
+
+    .badge-home  { background: #052e16; color: #4ade80; }
+    .badge-draw  { background: #1c1917; color: #fbbf24; }
+    .badge-away  { background: #2d0a0a; color: #f87171; }
+    .badge-miss  { background: #1a1a1a; color: #6b7280; }
+
+    .stat-label { color: #4b5563; font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    .accuracy-ring {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 1rem;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .fade-in { animation: fadeIn 0.3s ease forwards; }
+
+    .spinner {
+      border: 2px solid #1e2d1e;
+      border-top-color: #4ade80;
+      border-radius: 50%;
+      width: 24px; height: 24px;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #0a0f0a; }
+    ::-webkit-scrollbar-thumb { background: #1e2d1e; border-radius: 3px; }
+  </style>
+</head>
+<body class="min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-[#1e2d1e] sticky top-0 z-50" style="background:#0a0f0a;">
+    <div class="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-lg" style="background:#052e16;">⚽</div>
+        <div>
+          <h1 class="font-semibold text-white text-sm leading-none">EPL Predictor</h1>
+          <p class="text-[#4b5563] text-xs mt-0.5">ML-powered match predictions</p>
+        </div>
+      </div>
+      <div id="meta-badge" class="text-right hidden">
+        <p class="text-[#4ade80] text-xs font-mono font-medium" id="meta-season"></p>
+        <p class="text-[#4b5563] text-xs" id="meta-updated"></p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="border-b border-[#1e2d1e]">
+    <div class="max-w-5xl mx-auto px-4 flex gap-6">
+      <button onclick="showTab('upcoming')" id="tab-upcoming"
+        class="tab-active py-3 text-sm font-medium transition-colors">
+        Upcoming
+      </button>
+      <button onclick="showTab('past')" id="tab-past"
+        class="tab-inactive py-3 text-sm font-medium transition-colors">
+        Past Results
+      </button>
+      <button onclick="showTab('model')" id="tab-model"
+        class="tab-inactive py-3 text-sm font-medium transition-colors">
+        Model Info
+      </button>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <main class="max-w-5xl mx-auto px-4 py-8">
+
+    <!-- Loading -->
+    <div id="loading" class="flex items-center justify-center gap-3 py-20">
+      <div class="spinner"></div>
+      <span class="text-[#4b5563] text-sm">Loading predictions...</span>
+    </div>
+
+    <!-- Upcoming tab -->
+    <div id="tab-content-upcoming" class="hidden">
+      <div class="mb-6 flex items-center justify-between">
+        <div>
+          <h2 class="text-white font-semibold text-lg" id="upcoming-title">Matchweek —</h2>
+          <p class="text-[#4b5563] text-sm mt-0.5">Predictions generated by ensemble model (LightGBM + Poisson)</p>
+        </div>
+        <div id="accuracy-widget" class="hidden flex items-center gap-3 text-right">
+          <div>
+            <p class="text-[#4b5563] text-xs">recent accuracy</p>
+            <p class="text-[#4ade80] font-mono font-semibold text-lg" id="recent-accuracy">—</p>
+          </div>
+        </div>
+      </div>
+      <div id="upcoming-cards" class="grid gap-4"></div>
+      <div id="upcoming-empty" class="hidden text-center py-16 text-[#4b5563] text-sm">
+        No upcoming matches loaded yet.
+      </div>
+    </div>
+
+    <!-- Past tab -->
+    <div id="tab-content-past" class="hidden">
+      <div class="mb-6">
+        <h2 class="text-white font-semibold text-lg">Past Predictions</h2>
+        <p class="text-[#4b5563] text-sm mt-0.5">How the model performed on completed matchweeks</p>
+      </div>
+      <div id="accuracy-summary" class="hidden grid grid-cols-3 gap-4 mb-8"></div>
+      <div id="past-content"></div>
+      <div id="past-empty" class="hidden text-center py-16 text-[#4b5563] text-sm">
+        No past predictions yet. Results will appear here after each matchweek.
+      </div>
+    </div>
+
+    <!-- Model tab -->
+    <div id="tab-content-model" class="hidden fade-in">
+      <div class="mb-6">
+        <h2 class="text-white font-semibold text-lg">Model Details</h2>
+        <p class="text-[#4b5563] text-sm mt-0.5">Architecture, features, and cross-validation performance</p>
+      </div>
+      <div class="grid gap-4">
+
+        <!-- CV performance -->
+        <div class="match-card p-6">
+          <h3 class="text-white font-medium mb-4">Cross-validation performance</h3>
+          <p class="text-[#4b5563] text-xs mb-4">Walk-forward CV — train on seasons 1..k, validate on k+1. 9 folds, 2015-16 through 2025-26.</p>
+          <div class="grid grid-cols-2 gap-6 sm:grid-cols-4">
+            <div>
+              <p class="stat-label mb-1">Winner accuracy</p>
+              <p class="text-[#4ade80] font-mono font-semibold text-xl">55.8%</p>
+              <p class="text-[#4b5563] text-xs mt-0.5">naive: 44.1%</p>
+            </div>
+            <div>
+              <p class="stat-label mb-1">Goals MAE</p>
+              <p class="text-[#4ade80] font-mono font-semibold text-xl">0.895</p>
+              <p class="text-[#4b5563] text-xs mt-0.5">naive: 1.006</p>
+            </div>
+            <div>
+              <p class="stat-label mb-1">Exact score %</p>
+              <p class="text-[#4ade80] font-mono font-semibold text-xl">11.4%</p>
+              <p class="text-[#4b5563] text-xs mt-0.5">naive: 8.3%</p>
+            </div>
+            <div>
+              <p class="stat-label mb-1">Log-loss</p>
+              <p class="text-[#4ade80] font-mono font-semibold text-xl">0.941</p>
+              <p class="text-[#4b5563] text-xs mt-0.5">vs 1.315 baseline</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ensemble -->
+        <div class="match-card p-6">
+          <h3 class="text-white font-medium mb-4">Ensemble architecture</h3>
+          <div class="grid gap-3 sm:grid-cols-2">
+            <div class="rounded-lg p-4" style="background:#0d150d;border:1px solid #1e2d1e;">
+              <p class="text-[#4ade80] text-xs font-medium mb-1">Winner prediction</p>
+              <p class="text-white text-sm">10% LightGBM + 90% Poisson</p>
+              <p class="text-[#4b5563] text-xs mt-1">Poisson dominates — better calibrated for draws and away wins</p>
+            </div>
+            <div class="rounded-lg p-4" style="background:#0d150d;border:1px solid #1e2d1e;">
+              <p class="text-[#4ade80] text-xs font-medium mb-1">Goals prediction</p>
+              <p class="text-white text-sm">50% LightGBM + 50% Poisson</p>
+              <p class="text-[#4b5563] text-xs mt-1">Even blend — LightGBM captures non-linear interactions, Poisson gives count-appropriate rates</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Features -->
+        <div class="match-card p-6">
+          <h3 class="text-white font-medium mb-4">Features (34 total)</h3>
+          <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div>
+              <p class="text-[#4ade80] text-xs font-medium mb-2">Season-level stats</p>
+              <ul class="text-[#9ca3af] text-xs space-y-1">
+                <li>xG For/90, xGA/90, xGD/90</li>
+                <li>xA/90 (assists per 90)</li>
+                <li>PPDA (pressing intensity)</li>
+                <li>OPPDA (opponent pressing)</li>
+                <li>Shot on Target %, Save %</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-[#4ade80] text-xs font-medium mb-2">Rolling form</p>
+              <ul class="text-[#9ca3af] text-xs space-y-1">
+                <li>Last 5 match points</li>
+                <li>Last 10 match points</li>
+                <li>Last 5 goal difference</li>
+                <li>xG conversion rate (38-game)</li>
+              </ul>
+            </div>
+            <div>
+              <p class="text-[#4ade80] text-xs font-medium mb-2">Contextual</p>
+              <ul class="text-[#9ca3af] text-xs space-y-1">
+                <li>Days rest (capped 30d)</li>
+                <li>H2H avg pts (last 5 meetings)</li>
+                <li>Matchday number</li>
+                <li>Elo rating + differential</li>
+                <li>Closing market odds (B365 + Pinnacle)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Data sources -->
+        <div class="match-card p-6">
+          <h3 class="text-white font-medium mb-4">Data sources</h3>
+          <div class="grid gap-2 sm:grid-cols-2">
+            <div class="flex gap-3 items-start">
+              <span class="text-[#4ade80] text-xs font-mono mt-0.5">01</span>
+              <div>
+                <p class="text-white text-sm">FBref</p>
+                <p class="text-[#4b5563] text-xs">400+ squad/opponent stats via ScraperFC</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="text-[#4ade80] text-xs font-mono mt-0.5">02</span>
+              <div>
+                <p class="text-white text-sm">Understat</p>
+                <p class="text-[#4b5563] text-xs">Match xG, season table, player stats via Selenium</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="text-[#4ade80] text-xs font-mono mt-0.5">03</span>
+              <div>
+                <p class="text-white text-sm">SofaScore</p>
+                <p class="text-[#4b5563] text-xs">Team and player league stats via ScraperFC API</p>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <span class="text-[#4ade80] text-xs font-mono mt-0.5">04</span>
+              <div>
+                <p class="text-white text-sm">Football-Data.co.uk</p>
+                <p class="text-[#4b5563] text-xs">Closing odds — B365 + Pinnacle, all 11 seasons</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="border-t border-[#1e2d1e] mt-16 py-8">
+    <div class="max-w-5xl mx-auto px-4 flex items-center justify-between">
+      <p class="text-[#4b5563] text-xs">Built with LightGBM, Poisson regression, and 11 seasons of EPL data.</p>
+      <a href="https://github.com/sohamm20/EPL_Predictor_Tool" target="_blank"
+        class="text-[#4b5563] hover:text-[#4ade80] text-xs transition-colors">GitHub →</a>
+    </div>
+  </footer>
+
+<script>
+// ── team code → logo filename mapping ────────────────────────────────────────
+const TEAM_LOGOS = {
+  ARS: 'arsenal.png',
+  AVL: 'aston_villa.png',
+  BOU: 'bournemouth.png',
+  BRE: 'brentford.png',
+  BRI: 'brighton.png',
+  BUR: 'burnley.png',
+  CHE: 'chelsea.png',
+  CRY: 'crystal_palace.png',
+  EVE: 'everton.png',
+  FUL: 'fulham.png',
+  IPS: 'ipswich_town.png',
+  LEE: 'leeds.png',
+  LIV: 'liverpool.png',
+  MCI: 'man_city.png',
+  MUN: 'man_utd.png',
+  NEW: 'newcastle.png',
+  NFO: 'nottingham_forest.png',
+  SOU: 'southampton.png',
+  SUN: 'sunderland.png',
+  TOT: 'tottenham.png',
+  WHU: 'west_ham.png',
+  WOL: 'wolves.png',
+};
+
+// fallback kit colours for teams without a logo file
+const TEAM_COLOURS = {
+  ARS: '#EF0107', AVL: '#95BFE5', BOU: '#DA291C', BRE: '#e30613',
+  BRI: '#0057B8', BUR: '#6C1D45', CHE: '#034694', CRY: '#1B458F',
+  EVE: '#003399', FUL: '#CC0000', IPS: '#0044A9', LEE: '#FFCD00',
+  LEI: '#003090', LIV: '#C8102E', LUT: '#F78F1E', MCI: '#6CABDD',
+  MUN: '#DA291C', NEW: '#241F20', NFO: '#DD0000', SHU: '#EE2737',
+  SOU: '#D71920', TOT: '#132257', WAT: '#FBEE23', WBA: '#122F67',
+  WHU: '#7A263A', WOL: '#FDB913',
+};
+
+const TEAM_ABBR = {
+  ARS:'Arsenal', AVL:'Aston Villa', BOU:'Bournemouth', BRE:'Brentford',
+  BRI:'Brighton', BUR:'Burnley', CHE:'Chelsea', CRY:'Crystal Palace',
+  EVE:'Everton', FUL:'Fulham', IPS:'Ipswich', LEE:'Leeds',
+  LEI:'Leicester', LIV:'Liverpool', LUT:'Luton', MCI:'Man City',
+  MUN:'Man United', NEW:'Newcastle', NFO:"Nott'm Forest", SHU:'Sheffield Utd',
+  SOU:'Southampton', TOT:'Tottenham', WAT:'Watford', WBA:'West Brom',
+  WHU:'West Ham', WOL:'Wolves',
+};
+
+// ── helpers ───────────────────────────────────────────────────────────────────
+function pct(v) { return (v * 100).toFixed(1) + '%'; }
+function round1(v) { return v.toFixed(1); }
+
+function teamBadge(code, size = 36) {
+  const logo = TEAM_LOGOS[code];
+  const colour = TEAM_COLOURS[code] || '#4ade80';
+  const name = TEAM_ABBR[code] || code;
+  const initials = name.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
+  const pad = Math.round(size * 0.12);
+
+  if (logo) {
+    // use real logo — onerror falls back to initials badge
+    return `
+      <div style="width:${size}px;height:${size}px;border-radius:50%;background:#141f14;
+        border:1.5px solid #1e2d1e;display:flex;align-items:center;justify-content:center;
+        flex-shrink:0;overflow:hidden;">
+        <img src="logos/${logo}" alt="${name}"
+          style="width:${size - pad * 2}px;height:${size - pad * 2}px;object-fit:contain;"
+          onerror="this.parentElement.innerHTML='<span style=\\'font-size:${size * 0.3}px;font-weight:700;color:${colour}\\'>${initials}</span>'" />
+      </div>`;
+  }
+  // fallback: coloured initials circle
+  return `
+    <div style="width:${size}px;height:${size}px;border-radius:50%;background:${colour}22;
+      border:1.5px solid ${colour}55;display:flex;align-items:center;justify-content:center;
+      font-size:${size * 0.3}px;font-weight:700;color:${colour};flex-shrink:0;">
+      ${initials}
+    </div>`;
+}
+
+function eloBar(homeElo, awayElo) {
+  const total = homeElo + awayElo;
+  const homePct = (homeElo / total * 100).toFixed(1);
+  return `
+    <div class="flex items-center gap-2 text-xs">
+      <span class="text-[#4b5563] font-mono">${Math.round(homeElo)}</span>
+      <div class="flex-1 h-1.5 rounded-full overflow-hidden" style="background:#1e2d1e;">
+        <div style="width:${homePct}%;height:100%;background:#4ade80;border-radius:9999px;"></div>
+      </div>
+      <span class="text-[#4b5563] font-mono">${Math.round(awayElo)}</span>
+    </div>`;
+}
+
+function probBars(home, draw, away) {
+  return `
+    <div class="space-y-2">
+      <div>
+        <div class="flex justify-between mb-1">
+          <span class="stat-label">home win</span>
+          <span class="text-[#4ade80] text-xs font-mono font-medium">${pct(home)}</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${home*100}%;background:#4ade80;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between mb-1">
+          <span class="stat-label">draw</span>
+          <span class="text-[#fbbf24] text-xs font-mono font-medium">${pct(draw)}</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${draw*100}%;background:#fbbf24;"></div>
+        </div>
+      </div>
+      <div>
+        <div class="flex justify-between mb-1">
+          <span class="stat-label">away win</span>
+          <span class="text-[#f87171] text-xs font-mono font-medium">${pct(away)}</span>
+        </div>
+        <div class="prob-bar-track">
+          <div class="prob-bar-fill" style="width:${away*100}%;background:#f87171;"></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function resultBadge(result, actual) {
+  if (!result) return '';
+  const map = { home: ['badge-home','Home Win'], draw: ['badge-draw','Draw'], away: ['badge-away','Away Win'] };
+  const [cls, label] = map[result] || ['badge-miss', '?'];
+  return `
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="px-2 py-0.5 rounded text-xs font-medium ${cls}">${label}</span>
+      ${actual ? `<span class="text-[#6b7280] text-xs font-mono">${actual}</span>` : ''}
+    </div>`;
+}
+
+function predictedWinner(home, draw, away) {
+  const max = Math.max(home, draw, away);
+  if (max === home) return 'home';
+  if (max === draw) return 'draw';
+  return 'away';
+}
+
+function wasCorrect(m) {
+  if (!m.result) return null;
+  return predictedWinner(m.home_win_prob, m.draw_prob, m.away_win_prob) === m.result;
+}
+
+// ── upcoming match card ───────────────────────────────────────────────────────
+function upcomingCard(m) {
+  const homeColour = TEAM_COLOURS[m.home_team] || '#4ade80';
+  const awayColour = TEAM_COLOURS[m.away_team] || '#f87171';
+  const homeName = m.home_team_full || TEAM_ABBR[m.home_team] || m.home_team;
+  const awayName = m.away_team_full || TEAM_ABBR[m.away_team] || m.away_team;
+
+  const kickoff = m.kickoff ? new Date(m.kickoff) : null;
+  const timeStr = kickoff
+    ? kickoff.toLocaleString('en-GB', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' })
+    : '';
+
+  return `
+    <div class="match-card p-5 fade-in">
+      <!-- teams row -->
+      <div class="flex items-center justify-between mb-5">
+        <div class="flex items-center gap-3 flex-1 min-w-0">
+          ${teamBadge(m.home_team, 40)}
+          <div class="min-w-0">
+            <p class="text-white font-semibold text-sm truncate">${homeName}</p>
+            <p class="stat-label mt-0.5">Home</p>
+          </div>
+        </div>
+
+        <div class="text-center px-4 flex-shrink-0">
+          <div class="text-[#4ade80] font-mono font-bold text-lg tracking-widest">${m.predicted_score}</div>
+          <p class="stat-label mt-0.5">predicted</p>
+          ${timeStr ? `<p class="text-[#4b5563] text-xs mt-1">${timeStr}</p>` : ''}
+        </div>
+
+        <div class="flex items-center gap-3 flex-1 min-w-0 justify-end">
+          <div class="text-right min-w-0">
+            <p class="text-white font-semibold text-sm truncate">${awayName}</p>
+            <p class="stat-label mt-0.5">Away</p>
+          </div>
+          ${teamBadge(m.away_team, 40)}
+        </div>
+      </div>
+
+      <!-- prob bars -->
+      <div class="mb-4">
+        ${probBars(m.home_win_prob, m.draw_prob, m.away_win_prob)}
+      </div>
+
+      <!-- top scorelines -->
+      ${m.top_scorelines && m.top_scorelines.length ? `
+      <div class="mb-4">
+        <p class="stat-label mb-2">scoreline probabilities</p>
+        <div class="flex flex-wrap gap-2">
+          ${m.top_scorelines.map((s, i) => `
+            <div class="flex items-center gap-1.5 bg-[#0d1a0d] border border-[#1e2d1e] rounded px-2.5 py-1 ${i === 0 ? 'border-[#4ade80]/40' : ''}">
+              <span class="font-mono text-sm ${i === 0 ? 'text-[#4ade80]' : 'text-[#9ca3af]'} font-bold">${s.score}</span>
+              <span class="text-[#6b7280] text-xs">${(s.prob * 100).toFixed(1)}%</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      ` : ''}
+
+      <!-- bottom stats row -->
+      <div class="border-t border-[#1e2d1e] pt-4 grid grid-cols-3 gap-3 text-center">
+        <div>
+          <p class="stat-label mb-1">xG home</p>
+          <p class="text-white font-mono text-sm font-medium">${m.expected_home_goals.toFixed(2)}</p>
+        </div>
+        <div>
+          ${m.home_elo && m.away_elo ? `
+            <p class="stat-label mb-1">Elo strength</p>
+            ${eloBar(m.home_elo, m.away_elo)}
+          ` : ''}
+        </div>
+        <div>
+          <p class="stat-label mb-1">xG away</p>
+          <p class="text-white font-mono text-sm font-medium">${m.expected_away_goals.toFixed(2)}</p>
+        </div>
+      </div>
+    </div>`;
+}
+
+// ── past match row ────────────────────────────────────────────────────────────
+function pastMatchRow(m, i) {
+  const correct = wasCorrect(m);
+  const homeName = m.home_team_full || TEAM_ABBR[m.home_team] || m.home_team;
+  const awayName = m.away_team_full || TEAM_ABBR[m.away_team] || m.away_team;
+  const indicator = correct === null ? '' : correct
+    ? '<span class="text-[#4ade80] text-xs">✓</span>'
+    : '<span class="text-[#f87171] text-xs">✗</span>';
+
+  return `
+    <div class="flex items-center gap-4 py-3 ${i > 0 ? 'border-t border-[#1e2d1e]' : ''}">
+      <div class="w-4 text-center flex-shrink-0">${indicator}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2">
+          ${teamBadge(m.home_team, 20)}
+          <span class="text-white text-sm truncate">${homeName}</span>
+          <span class="text-[#4b5563] text-xs">vs</span>
+          <span class="text-white text-sm truncate">${awayName}</span>
+          ${teamBadge(m.away_team, 20)}
+        </div>
+      </div>
+      <div class="text-center flex-shrink-0">
+        <p class="stat-label">predicted</p>
+        <p class="text-[#9ca3af] font-mono text-xs">${m.predicted_score}</p>
+      </div>
+      <div class="text-center flex-shrink-0">
+        ${resultBadge(m.result, m.actual_score)}
+      </div>
+      <div class="text-right flex-shrink-0 hidden sm:block">
+        <p class="stat-label">probs</p>
+        <p class="text-[#4b5563] font-mono text-xs">${pct(m.home_win_prob)} / ${pct(m.draw_prob)} / ${pct(m.away_win_prob)}</p>
+      </div>
+    </div>`;
+}
+
+// ── accuracy summary card ─────────────────────────────────────────────────────
+function buildAccuracySummary(past) {
+  let total = 0, correct = 0;
+  past.forEach(wk => wk.matches.forEach(m => {
+    if (m.result) { total++; if (wasCorrect(m)) correct++; }
+  }));
+  if (total === 0) return;
+
+  const acc = (correct / total * 100).toFixed(0);
+  const colour = acc >= 55 ? '#4ade80' : acc >= 45 ? '#fbbf24' : '#f87171';
+  const bg = acc >= 55 ? '#052e16' : acc >= 45 ? '#1c1510' : '#1f0505';
+
+  document.getElementById('accuracy-summary').classList.remove('hidden');
+  document.getElementById('accuracy-summary').innerHTML = `
+    <div class="match-card p-4 text-center">
+      <div class="accuracy-ring mx-auto mb-2" style="background:${bg};color:${colour};border:2px solid ${colour}44;">${acc}%</div>
+      <p class="stat-label">overall accuracy</p>
+    </div>
+    <div class="match-card p-4 text-center">
+      <p class="text-white font-mono font-semibold text-xl">${correct}/${total}</p>
+      <p class="stat-label mt-1">correct predictions</p>
+    </div>
+    <div class="match-card p-4 text-center">
+      <p class="text-white font-mono font-semibold text-xl">${past.length}</p>
+      <p class="stat-label mt-1">matchweeks tracked</p>
+    </div>`;
+
+  // also update header accuracy widget
+  document.getElementById('recent-accuracy').textContent = acc + '%';
+  document.getElementById('accuracy-widget').classList.remove('hidden');
+}
+
+// ── tab logic ─────────────────────────────────────────────────────────────────
+function showTab(name) {
+  ['upcoming','past','model'].forEach(t => {
+    document.getElementById(`tab-content-${t}`).classList.add('hidden');
+    document.getElementById(`tab-${t}`).className = 'tab-inactive py-3 text-sm font-medium transition-colors';
+  });
+  document.getElementById(`tab-content-${name}`).classList.remove('hidden');
+  document.getElementById(`tab-content-${name}`).classList.add('fade-in');
+  document.getElementById(`tab-${name}`).className = 'tab-active py-3 text-sm font-medium transition-colors';
+}
+
+// ── main render ───────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const res = await fetch('predictions.json');
+    const data = await res.json();
+
+    document.getElementById('loading').classList.add('hidden');
+
+    // meta
+    document.getElementById('meta-season').textContent = `${data.season} · GW${data.matchweek}`;
+    document.getElementById('meta-updated').textContent = `Updated ${data.updated}`;
+    document.getElementById('meta-badge').classList.remove('hidden');
+
+    // upcoming
+    document.getElementById('upcoming-title').textContent = `Matchweek ${data.matchweek} · ${data.season}`;
+    const upcomingContainer = document.getElementById('upcoming-cards');
+    if (data.matches && data.matches.length > 0) {
+      upcomingContainer.innerHTML = data.matches.map(m => upcomingCard(m)).join('');
+    } else {
+      document.getElementById('upcoming-empty').classList.remove('hidden');
+    }
+    document.getElementById('tab-content-upcoming').classList.remove('hidden');
+
+    // past
+    const past = data.past_matchweeks || [];
+    if (past.length > 0) {
+      buildAccuracySummary(past);
+      const pastContainer = document.getElementById('past-content');
+      pastContainer.innerHTML = past.slice().reverse().map(wk => `
+        <div class="match-card p-5 mb-4 fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="text-white font-medium text-sm">Matchweek ${wk.matchweek}</h3>
+              <p class="text-[#4b5563] text-xs">${wk.season || data.season}</p>
+            </div>
+            <div class="text-right">
+              ${(() => {
+                const t = wk.matches.filter(m => m.result).length;
+                const c = wk.matches.filter(m => wasCorrect(m)).length;
+                return t > 0
+                  ? `<span class="text-[#4ade80] text-xs font-mono">${c}/${t} correct</span>`
+                  : '<span class="text-[#4b5563] text-xs">pending</span>';
+              })()}
+            </div>
+          </div>
+          ${wk.matches.map((m, i) => pastMatchRow(m, i)).join('')}
+        </div>`).join('');
+    } else {
+      document.getElementById('past-empty').classList.remove('hidden');
+    }
+
+  } catch (err) {
+    document.getElementById('loading').innerHTML = `
+      <div class="text-center">
+        <p class="text-[#f87171] text-sm mb-1">Failed to load predictions</p>
+        <p class="text-[#4b5563] text-xs">${err.message}</p>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>

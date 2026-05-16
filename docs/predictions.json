@@ -1,0 +1,398 @@
+{
+  "matchweek": 37,
+  "season": "2025-26",
+  "updated": "2026-05-16",
+  "matches": [
+    {
+      "home_team": "AVL",
+      "away_team": "LIV",
+      "home_team_full": "Aston Villa",
+      "away_team_full": "Liverpool",
+      "kickoff": "2026-05-15T15:00:00Z",
+      "home_win_prob": 0.409,
+      "draw_prob": 0.2416,
+      "away_win_prob": 0.3494,
+      "expected_home_goals": 1.37,
+      "expected_away_goals": 1.25,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1247
+        },
+        {
+          "score": "1-0",
+          "prob": 0.0999
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0911
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0854
+        },
+        {
+          "score": "1-2",
+          "prob": 0.0779
+        }
+      ],
+      "home_elo": 1541.5,
+      "away_elo": 1580.0,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "MUN",
+      "away_team": "NFO",
+      "home_team_full": "Man United",
+      "away_team_full": "Nott'm Forest",
+      "kickoff": "2026-05-17T07:30:00Z",
+      "home_win_prob": 0.6181,
+      "draw_prob": 0.1996,
+      "away_win_prob": 0.1823,
+      "expected_home_goals": 1.82,
+      "expected_away_goals": 0.98,
+      "predicted_score": "2-1",
+      "top_scorelines": [
+        {
+          "score": "1-0",
+          "prob": 0.1103
+        },
+        {
+          "score": "1-1",
+          "prob": 0.1086
+        },
+        {
+          "score": "2-0",
+          "prob": 0.1003
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0987
+        },
+        {
+          "score": "3-0",
+          "prob": 0.0608
+        }
+      ],
+      "home_elo": 1569.0,
+      "away_elo": 1468.0,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "BRE",
+      "away_team": "CRY",
+      "home_team_full": "Brentford",
+      "away_team_full": "Crystal Palace",
+      "kickoff": "2026-05-17T10:00:00Z",
+      "home_win_prob": 0.4713,
+      "draw_prob": 0.2491,
+      "away_win_prob": 0.2796,
+      "expected_home_goals": 1.47,
+      "expected_away_goals": 1.05,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.124
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1179
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0914
+        },
+        {
+          "score": "2-0",
+          "prob": 0.0869
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0842
+        }
+      ],
+      "home_elo": 1494.0,
+      "away_elo": 1456.1,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "LEE",
+      "away_team": "BRI",
+      "home_team_full": "Leeds",
+      "away_team_full": "Brighton",
+      "kickoff": "2026-05-17T10:00:00Z",
+      "home_win_prob": 0.4122,
+      "draw_prob": 0.2571,
+      "away_win_prob": 0.3307,
+      "expected_home_goals": 1.29,
+      "expected_away_goals": 1.14,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1296
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1142
+        },
+        {
+          "score": "0-1",
+          "prob": 0.1008
+        },
+        {
+          "score": "0-0",
+          "prob": 0.0887
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0834
+        }
+      ],
+      "home_elo": 1460.9,
+      "away_elo": 1540.1,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "WOL",
+      "away_team": "FUL",
+      "home_team_full": "Wolves",
+      "away_team_full": "Fulham",
+      "kickoff": "2026-05-17T10:00:00Z",
+      "home_win_prob": 0.3701,
+      "draw_prob": 0.2599,
+      "away_win_prob": 0.37,
+      "expected_home_goals": 1.15,
+      "expected_away_goals": 1.18,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.132
+        },
+        {
+          "score": "0-1",
+          "prob": 0.1146
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1119
+        },
+        {
+          "score": "0-0",
+          "prob": 0.0971
+        },
+        {
+          "score": "1-2",
+          "prob": 0.0779
+        }
+      ],
+      "home_elo": 1330.8,
+      "away_elo": 1486.5,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "EVE",
+      "away_team": "SUN",
+      "home_team_full": "Everton",
+      "away_team_full": "Sunderland",
+      "kickoff": "2026-05-17T10:00:00Z",
+      "home_win_prob": 0.4649,
+      "draw_prob": 0.2519,
+      "away_win_prob": 0.2832,
+      "expected_home_goals": 1.31,
+      "expected_away_goals": 1.05,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1297
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1236
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0987
+        },
+        {
+          "score": "0-0",
+          "prob": 0.0941
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0853
+        }
+      ],
+      "home_elo": 1485.7,
+      "away_elo": 1412.5,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "NEW",
+      "away_team": "WHU",
+      "home_team_full": "Newcastle",
+      "away_team_full": "West Ham",
+      "kickoff": "2026-05-17T12:30:00Z",
+      "home_win_prob": 0.5191,
+      "draw_prob": 0.2306,
+      "away_win_prob": 0.2503,
+      "expected_home_goals": 1.5,
+      "expected_away_goals": 1.04,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1231
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1179
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0922
+        },
+        {
+          "score": "2-0",
+          "prob": 0.0882
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0822
+        }
+      ],
+      "home_elo": 1452.8,
+      "away_elo": 1448.5,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "ARS",
+      "away_team": "BUR",
+      "home_team_full": "Arsenal",
+      "away_team_full": "Burnley",
+      "kickoff": "2026-05-18T15:00:00Z",
+      "home_win_prob": 0.7531,
+      "draw_prob": 0.1518,
+      "away_win_prob": 0.0951,
+      "expected_home_goals": 2.28,
+      "expected_away_goals": 0.82,
+      "predicted_score": "2-1",
+      "top_scorelines": [
+        {
+          "score": "2-0",
+          "prob": 0.1167
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1024
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0961
+        },
+        {
+          "score": "3-0",
+          "prob": 0.0887
+        },
+        {
+          "score": "1-1",
+          "prob": 0.0842
+        }
+      ],
+      "home_elo": 1666.6,
+      "away_elo": 1279.4,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "BOU",
+      "away_team": "MCI",
+      "home_team_full": "Bournemouth",
+      "away_team_full": "Man City",
+      "kickoff": "2026-05-19T14:30:00Z",
+      "home_win_prob": 0.3544,
+      "draw_prob": 0.245,
+      "away_win_prob": 0.4006,
+      "expected_home_goals": 1.36,
+      "expected_away_goals": 1.37,
+      "predicted_score": "1-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1215
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0892
+        },
+        {
+          "score": "1-0",
+          "prob": 0.0886
+        },
+        {
+          "score": "1-2",
+          "prob": 0.0832
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0827
+        }
+      ],
+      "home_elo": 1538.5,
+      "away_elo": 1678.5,
+      "result": null,
+      "actual_score": null
+    },
+    {
+      "home_team": "CHE",
+      "away_team": "TOT",
+      "home_team_full": "Chelsea",
+      "away_team_full": "Tottenham",
+      "kickoff": "2026-05-18T15:15:00Z",
+      "home_win_prob": 0.5361,
+      "draw_prob": 0.2241,
+      "away_win_prob": 0.2398,
+      "expected_home_goals": 1.65,
+      "expected_away_goals": 1.1,
+      "predicted_score": "2-1",
+      "top_scorelines": [
+        {
+          "score": "1-1",
+          "prob": 0.1162
+        },
+        {
+          "score": "1-0",
+          "prob": 0.1053
+        },
+        {
+          "score": "2-1",
+          "prob": 0.0956
+        },
+        {
+          "score": "2-0",
+          "prob": 0.0866
+        },
+        {
+          "score": "0-1",
+          "prob": 0.0706
+        }
+      ],
+      "home_elo": 1490.8,
+      "away_elo": 1361.9,
+      "result": null,
+      "actual_score": null
+    }
+  ],
+  "past_matchweeks": []
+}
