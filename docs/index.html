@@ -554,8 +554,27 @@ function upcomingCard(m) {
         </div>
 
         <div class="text-center px-4 flex-shrink-0">
+          <!--
+          OLD: direct scoreline
           <div class="font-display text-[#4ade80] leading-none" style="font-size:2.2rem;letter-spacing:0.12em;">${m.predicted_score}</div>
           <p class="stat-label mt-1">predicted</p>
+          -->
+          ${(() => {
+            const winner = predictedWinner(m.home_win_prob, m.draw_prob, m.away_win_prob);
+            const margin = Math.abs(m.expected_home_goals - m.expected_away_goals);
+            const marginStr = margin < 0.4 ? 'close' : margin < 0.9 ? 'by ~1' : margin < 1.6 ? 'by ~2' : 'by 2+';
+            const winnerName = winner === 'home' ? homeName : winner === 'away' ? awayName : null;
+            const winnerColour = winner === 'home' ? '#4ade80' : winner === 'away' ? '#f87171' : '#fbbf24';
+            if (winner === 'draw') {
+              return `
+                <div class="font-display leading-none" style="font-size:1.6rem;letter-spacing:0.08em;color:#fbbf24;">DRAW</div>
+                <p class="stat-label mt-1" style="color:#fbbf24;">likely result</p>`;
+            }
+            return `
+              <div class="font-display leading-none" style="font-size:1.4rem;letter-spacing:0.06em;color:${winnerColour};">${winnerName}</div>
+              <div class="font-mono text-xs mt-1" style="color:${winnerColour}88;">${marginStr}</div>
+              <p class="stat-label mt-0.5">predicted winner</p>`;
+          })()}
           ${timeStr ? `<p class="text-[#4b5563] text-xs mt-1.5 font-mono">${timeStr}</p>` : ''}
         </div>
 
